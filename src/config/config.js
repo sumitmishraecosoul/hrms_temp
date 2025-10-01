@@ -1,3 +1,3 @@
-const DEV_URL = "http://localhost:5010";
+const DEV_URL = "api.thrivebrands-hrms.com";
 
 export default DEV_URL;
