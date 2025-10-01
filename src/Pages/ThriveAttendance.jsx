@@ -47,7 +47,7 @@ const ThriveAttendance = () => {
             <h1 className="text-3xl font-bold text-[#403d39] mb-2">Attendance Management</h1>
             <p className="text-gray-600">Manage employee attendance here</p>
           </div>
-          <DailyAttendanceTable filterCompany="Thrive-Brands" onViewAttendance={handleViewAttendance} onUpload={handleUploadAttendance} />
+          <DailyAttendanceTable filterCompany="ThriveBrands" onViewAttendance={handleViewAttendance} onUpload={handleUploadAttendance} />
 
           {/* <AttendanceTable onViewAttendance={handleViewAttendance} onUpload={handleUploadAttendance} /> */}
           

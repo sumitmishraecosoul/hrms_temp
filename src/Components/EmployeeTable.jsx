@@ -33,7 +33,7 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.id.toLowerCase().includes(searchTerm.toLowerCase())
+      emp.biometricId.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, employeesList]);
 
@@ -150,7 +150,7 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
         <div className="relative">
           <input
             type="text"
-            placeholder="Search employees by name, email, department, or ID"
+            placeholder="Search employees by name, email, department, or biometric ID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-3 pl-10 text-[#403d39] bg-[#fffcf2] border border-[#ccc5b9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 placeholder-[#8a8a8a]"
@@ -173,7 +173,7 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
           <thead className="bg-[#fffcf2]">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
-                E. Id
+                Biometric ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
                 Name
@@ -196,7 +196,7 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
                   className={idx % 2 === 0 ? 'bg-[#fffcf2]' : 'bg-white'}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39] font-medium">
-                    {emp.id}
+                    {emp.biometricId}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39]">
                     {emp.name}

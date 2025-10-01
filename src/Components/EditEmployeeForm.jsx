@@ -34,7 +34,7 @@ const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDelet
     const path = window.location.pathname || '';
     const isEcoSoul = path.startsWith('/ecosoul');
     const isThriveBrands = path.startsWith('/thrive-brands');
-    const fixedCompany = isEcoSoul ? 'EcoSoul' : isThriveBrands ? 'Thrive-Brands' : '';
+    const fixedCompany = isEcoSoul ? 'EcoSoul' : isThriveBrands ? 'ThriveBrands' : '';
     setRouteCompany(fixedCompany);
   }, []);
 

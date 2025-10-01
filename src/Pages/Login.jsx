@@ -1,10 +1,46 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import LoginForm from '../Components/LoginForm'
 import SplitText from '../Components/SplitText'
 import SilkBackground from '../Components/SilkBackground'
+import { useAuth } from '../hooks/useAuth.jsx'
 import background from '../assets/background.png'
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      navigate('/path-select');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <>
+        <div className='absolute inset-0'>
+          <SilkBackground color="#fffcf2" />
+        </div>
+        <div className='flex relative justify-center items-center h-screen w-full overflow-hidden'>
+          <div className="flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#eb5e28] mx-auto"></div>
+              <p className="text-[#403d39] text-lg">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Don't render login form if already authenticated
+  if (isAuthenticated) {
+    return null;
+  }
+
   return (
     <>
     <div className='absolute inset-0'>

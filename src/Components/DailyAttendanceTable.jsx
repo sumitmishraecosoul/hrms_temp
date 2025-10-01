@@ -26,7 +26,7 @@ const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmplo
     return localEmployees.filter(emp => 
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.id.toLowerCase().includes(searchTerm.toLowerCase())
+      emp.biometricId.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, localEmployees]);
 
@@ -229,7 +229,7 @@ const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmplo
           <thead className="bg-[#fffcf2]">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
-                E. ID
+                Biometric ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
                 Name
@@ -248,7 +248,7 @@ const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmplo
                   className={idx % 2 === 0 ? 'bg-[#fffcf2]' : 'bg-white'}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39] font-medium">
-                    {emp.id}
+                    {emp.biometricId}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39]">
                     {emp.name}

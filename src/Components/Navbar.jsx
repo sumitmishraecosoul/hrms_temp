@@ -27,7 +27,7 @@ const Navbar = () => {
 
     return (
         <div className="flex justify-end bg-[#fffcf2] shadow-lg border-b border-gray-200 h-[5rem] flex items-center justify-between px-6">
-            <div className="flex items-center space-x-4">
+            {/* <div className="flex items-center space-x-4">
                 <DropDown 
                     options={dropdownOptions}
                     buttonContent={
@@ -39,7 +39,7 @@ const Navbar = () => {
                     textColor="text-gray-600"
                     buttonBgColor="bg-[#eb5e28]"
                 />
-            </div>
+            </div> */}
         </div>
     );
 };

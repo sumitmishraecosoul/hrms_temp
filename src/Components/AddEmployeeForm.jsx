@@ -6,7 +6,6 @@ import { DEPARTMENTS, DESIGNATIONS, GENDERS } from '../config/constants';
 const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], designations = [], genders = [], companies = [] }) => {
   const location = useLocation();
   const [formData, setFormData] = useState({
-    id: '',
     name: '',
     email: '',
     department: '',
@@ -14,7 +13,9 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
     // dateOfJoining: '', // commented per request
     biometricId: '',
     gender: '',
-    company: ''
+    company: '',
+    dateOfBirth: '',
+    workAnniversary: ''
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +23,10 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
   
   const isEcoSoul = location.pathname.startsWith('/ecosoul');
   const isThriveBrands = location.pathname.startsWith('/thrive-brands');
-  const selectedCompany = isEcoSoul ? 'EcoSoul' : isThriveBrands ? 'Thrive-Brands' : '';
+  const selectedCompany = isEcoSoul ? 'EcoSoul' : isThriveBrands ? 'ThriveBrands' : '';
   
   
-  const availableCompanies = companies.length > 0 ? companies : (isEcoSoul ? ['EcoSoul'] : isThriveBrands ? ['Thrive-Brands'] : ['Thrive-Brands', 'EcoSoul']);
+  const availableCompanies = companies.length > 0 ? companies : (isEcoSoul ? ['EcoSoul'] : isThriveBrands ? ['ThriveBrands'] : ['ThriveBrands', 'EcoSoul']);
 
   // Built-in defaults for selects when props are not provided
   const departmentOptions = (departments && departments.length > 0)
@@ -69,12 +70,6 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.id.trim()) {
-      newErrors.id = 'Employee ID is required';
-    } else if (!/^\d+$/.test(formData.id.trim())) {
-      newErrors.id = 'Employee ID must be a valid number';
-    }
-
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     } else if (formData.name.trim().length < 2) {
@@ -115,6 +110,14 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
       newErrors.company = 'Company is required';
     }
 
+    if (!formData.dateOfBirth.trim()) {
+      newErrors.dateOfBirth = 'Date of Birth is required';
+    }
+
+    if (!formData.workAnniversary.trim()) {
+      newErrors.workAnniversary = 'Work Anniversary is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -134,7 +137,6 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
         console.log('Employee added successfully:', formData);
         
         setFormData({
-          id: '',
           name: '',
           email: '',
           department: '',
@@ -142,7 +144,9 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
           // dateOfJoining: '',
           biometricId: '',
           gender: '',
-          company: ''
+          company: '',
+          dateOfBirth: '',
+          workAnniversary: ''
         });
         setErrors({});
         onClose();
@@ -157,7 +161,6 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
 
   const handleClose = () => {
     setFormData({
-      id: '',
       name: '',
       email: '',
       department: '',
@@ -165,7 +168,9 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
       // dateOfJoining: '',
       biometricId: '',
       gender: '',
-      company: ''
+      company: '',
+      dateOfBirth: '',
+      workAnniversary: ''
     });
     setErrors({});
     onClose();
@@ -199,27 +204,6 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
               <p className="text-red-600 text-sm">{errors.submit}</p>
             </div>
           )}
-         
-          <div>
-            <label htmlFor="id" className="block text-sm font-semibold text-[#403d39] mb-2">
-              Employee ID *
-            </label>
-            <input
-              type="number"
-              id="id"
-              name="id"
-              value={formData.id}
-              onChange={handleInputChange}
-              placeholder="e.g., 123456"
-              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 placeholder-[#8a8a8a] ${
-                errors.id ? 'border-red-500' : 'border-[#ccc5b9]'
-              }`}
-            />
-            {errors.id && (
-              <p className="text-red-500 text-sm mt-1">{errors.id}</p>
-            )}
-          </div>
-
          
           <div>
             <label htmlFor="name" className="block text-sm font-semibold text-[#403d39] mb-2">
@@ -404,6 +388,44 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
             />
             {errors.biometricId && (
               <p className="text-red-500 text-sm mt-1">{errors.biometricId}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Date of Birth *
+            </label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 ${
+                errors.dateOfBirth ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            />
+            {errors.dateOfBirth && (
+              <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="workAnniversary" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Work Anniversary *
+            </label>
+            <input
+              type="date"
+              id="workAnniversary"
+              name="workAnniversary"
+              value={formData.workAnniversary}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 ${
+                errors.workAnniversary ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            />
+            {errors.workAnniversary && (
+              <p className="text-red-500 text-sm mt-1">{errors.workAnniversary}</p>
             )}
           </div>
 

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.jsx";
 import thriveLogo from "../assets/thriveLogo.svg";
 import ecosoulLogo from "../assets/ecosoulLogo.svg";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -23,10 +25,20 @@ const LoginForm = () => {
   };
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate("/path-select");
+    setErrors({});
+
+    const result = await login(formData.email, formData.password);
     
+    if (result.success) {
+      // Navigate to path selection
+      navigate("/path-select");
+    } else {
+      setErrors({ 
+        submit: result.error || 'Login failed. Please check your credentials.' 
+      });
+    }
   };
 
   return (
@@ -46,6 +58,12 @@ const LoginForm = () => {
         </h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {errors.submit && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-600 text-sm">{errors.submit}</p>
+          </div>
+        )}
+        
         <div>
           <label className="text-[#252422] block mb-1 font-medium">Email</label>
           <input
@@ -82,9 +100,22 @@ const LoginForm = () => {
 
         <button
           type="submit"
-          className="mt-4 w-full bg-gradient-to-r from-[#ccc5b9] to-[#403d39] hover:from-[#ccc5b9] hover:to-[#eb5e28] text-white py-3 rounded-md font-bold transition-all duration-300 transform hover:scale-105"
+          disabled={isLoading}
+          className={`mt-4 w-full bg-gradient-to-r from-[#ccc5b9] to-[#403d39] hover:from-[#ccc5b9] hover:to-[#eb5e28] text-white py-3 rounded-md font-bold transition-all duration-300 transform hover:scale-105 ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          Sign in
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Signing in...
+            </div>
+          ) : (
+            'Sign in'
+          )}
         </button>
       </form>
     </div>
