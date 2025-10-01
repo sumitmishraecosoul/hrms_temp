@@ -1,41 +1,66 @@
 import React, { useState, useEffect } from 'react';
+import { DEPARTMENTS, DESIGNATIONS, GENDERS } from '../config/constants';
 
-const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDeleteEmployee }) => {
+const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDeleteEmployee, departments = [], designations = [], genders = [], companies = [] }) => {
   const [formData, setFormData] = useState({
     id: '',
     name: '',
     email: '',
-    department: ''
+    department: '',
+    designation: '',
+    gender: '',
+    company: '',
+    // dateOfJoining: '', // commented per request
+    biometricId: ''
   });
   const [errors, setErrors] = useState({});
 
-  const departments = [
-    'HR',
-    'Engineering',
-    'Marketing',
-    'Finance',
-    'Operations',
-    'Sales',
-    'Support'
-  ];
+  // Built-in defaults for selects when props are not provided
+  const departmentOptions = (departments && departments.length > 0)
+    ? departments
+    : DEPARTMENTS;
 
-  
+  const designationOptions = (designations && designations.length > 0)
+    ? designations
+    : DESIGNATIONS;
+
+  const genderOptions = (genders && genders.length > 0)
+    ? genders
+    : GENDERS;
+
+  // Company is static from route; disable editing
+  const [routeCompany, setRouteCompany] = useState('');
+  useEffect(() => {
+    const path = window.location.pathname || '';
+    const isEcoSoul = path.startsWith('/ecosoul');
+    const isThriveBrands = path.startsWith('/thrive-brands');
+    const fixedCompany = isEcoSoul ? 'EcoSoul' : isThriveBrands ? 'Thrive-Brands' : '';
+    setRouteCompany(fixedCompany);
+  }, []);
+
+
   useEffect(() => {
     if (employee) {
       setFormData({
         id: employee.id || '',
         name: employee.name || '',
         email: employee.email || '',
-        department: employee.department || ''
+        department: employee.department || '',
+        designation: employee.designation || '',
+        gender: employee.gender || '',
+        company: routeCompany || employee.company || '',
+        // dateOfJoining: normalizedDate,
+        biometricId: employee.biometricId || ''
       });
     }
-  }, [employee]);
+  }, [employee, routeCompany]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    const nextValue = name === 'id' ? (value === '' ? '' : Number(value)) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: nextValue
     }));
     
     
@@ -50,10 +75,10 @@ const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDelet
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.id.trim()) {
+    if (formData.id === '' || formData.id === null || formData.id === undefined) {
       newErrors.id = 'Employee ID is required';
-    } else if (!/^E\d{3}$/.test(formData.id.trim())) {
-      newErrors.id = 'Employee ID must be in format E001, E002, etc.';
+    } else if (Number.isNaN(Number(formData.id))) {
+      newErrors.id = 'Employee ID must be a valid number';
     }
 
     if (!formData.name.trim()) {
@@ -72,17 +97,42 @@ const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDelet
       newErrors.department = 'Department is required';
     }
 
+    if (!formData.designation) {
+      newErrors.designation = 'Designation is required';
+    }
+
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
+    }
+
+    if (!formData.company) {
+      newErrors.company = 'Company is required';
+    }
+
+    // if (!formData.dateOfJoining) {
+    //   newErrors.dateOfJoining = 'Date of Joining is required';
+    // }
+
+    if (!formData.biometricId || String(formData.biometricId).trim() === '') {
+      newErrors.biometricId = 'Biometric ID is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onUpdateEmployee(employee.id, formData);
-      setErrors({});
-      onClose();
+      // Log intent to update for debugging
+      console.log('Submitting employee update with data:', formData);
+      const ok = await onUpdateEmployee(employee.id, formData);
+      if (ok) {
+        console.log('Employee updated successfully:', formData);
+        setErrors({});
+        onClose();
+      }
     }
   };
 
@@ -127,12 +177,12 @@ const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDelet
               Employee ID *
             </label>
             <input
-              type="text"
+              type="number"
               id="id"
               name="id"
               value={formData.id}
               onChange={handleInputChange}
-              placeholder="e.g., E001"
+              placeholder="e.g., 123"
               className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 placeholder-[#8a8a8a] ${
                 errors.id ? 'border-red-500' : 'border-[#ccc5b9]'
               }`}
@@ -199,7 +249,7 @@ const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDelet
               }`}
             >
               <option value="">Select Department</option>
-              {departments.map(dept => (
+              {departmentOptions.map(dept => (
                 <option key={dept} value={dept} className="text-[#403d39]">
                   {dept}
                 </option>
@@ -209,6 +259,126 @@ const EditEmployeeForm = ({ isOpen, onClose, employee, onUpdateEmployee, onDelet
               <p className="text-red-500 text-sm mt-1">{errors.department}</p>
             )}
           </div>
+
+          <div>
+            <label htmlFor="designation" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Designation *
+            </label>
+            <select
+              id="designation"
+              name="designation"
+              value={formData.designation}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 ${
+                errors.designation ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            >
+              <option value="">Select Designation</option>
+              {designationOptions.map(designation => (
+                <option key={designation} value={designation} className="text-[#403d39]">
+                  {designation}
+                </option>
+              ))}
+            </select>
+            {errors.designation && (
+              <p className="text-red-500 text-sm mt-1">{errors.designation}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="gender" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Gender *
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 ${
+                errors.gender ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            >
+              <option value="">Select Gender</option>
+              {genderOptions.map(gender => (
+                <option key={gender} value={gender} className="text-[#403d39]">
+                  {gender}
+                </option>
+              ))}
+            </select>
+            {errors.gender && (
+              <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="company" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Company *
+            </label>
+            <select
+              id="company"
+              name="company"
+              value={formData.company}
+              onChange={handleInputChange}
+              disabled
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 ${
+                errors.company ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            >
+              <option value="">Select Company</option>
+              {routeCompany && (
+                <option value={routeCompany} className="text-[#403d39]">
+                  {routeCompany}
+                </option>
+              )}
+            </select>
+            {errors.company && (
+              <p className="text-red-500 text-sm mt-1">{errors.company}</p>
+            )}
+          </div>
+
+          {/** Date of Joining field commented per request **/}
+          {false && (
+          <div>
+            <label htmlFor="dateOfJoining" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Date of Joining *
+            </label>
+            <input
+              type="date"
+              id="dateOfJoining"
+              name="dateOfJoining"
+              value={formData.dateOfJoining}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 ${
+                errors.dateOfJoining ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            />
+            {errors.dateOfJoining && (
+              <p className="text-red-500 text-sm mt-1">{errors.dateOfJoining}</p>
+            )}
+          </div>
+          )}
+
+          <div>
+            <label htmlFor="biometricId" className="block text-sm font-semibold text-[#403d39] mb-2">
+              Biometric ID *
+            </label>
+            <input
+              type="text"
+              id="biometricId"
+              name="biometricId"
+              value={formData.biometricId}
+              onChange={handleInputChange}
+              placeholder="Enter biometric ID"
+              className={`w-full px-4 py-3 text-[#403d39] bg-[#fffcf2] border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 placeholder-[#8a8a8a] ${
+                errors.biometricId ? 'border-red-500' : 'border-[#ccc5b9]'
+              }`}
+            />
+            {errors.biometricId && (
+              <p className="text-red-500 text-sm mt-1">{errors.biometricId}</p>
+            )}
+          </div>
+
+          
 
           
           <div className="space-y-4 pt-4">

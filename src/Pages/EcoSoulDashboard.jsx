@@ -14,18 +14,7 @@ import AddEmployeeForm from '../Components/AddEmployeeForm';
 const EcoSoulDashboard = () => {
   const [activePage, setActivePage] = useState('home');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [employeesList, setEmployeesList] = useState([
-    { id: 'E001', name: 'Alice Johnson', email: 'alice.johnson@example.com', department: 'HR' },
-    { id: 'E002', name: 'Bob Smith', email: 'bob.smith@example.com', department: 'Engineering' },
-    { id: 'E003', name: 'Charlie Brown', email: 'charlie.brown@example.com', department: 'Marketing' },
-    { id: 'E004', name: 'Diana Prince', email: 'diana.prince@example.com', department: 'Finance' },
-    { id: 'E005', name: 'Ethan Hunt', email: 'ethan.hunt@example.com', department: 'Operations' },
-    { id: 'E006', name: 'Fiona Gallagher', email: 'fiona.gallagher@example.com', department: 'Sales' },
-    { id: 'E007', name: 'George Miller', email: 'george.miller@example.com', department: 'Support' },
-    { id: 'E008', name: 'Hannah Lee', email: 'hannah.lee@example.com', department: 'Engineering' },
-    { id: 'E009', name: 'Ian Curtis', email: 'ian.curtis@example.com', department: 'HR' },
-    { id: 'E010', name: 'Julia Roberts', email: 'julia.roberts@example.com', department: 'Marketing' },
-  ]);
+  const [employeesList, setEmployeesList] = useState([]);
 
   const handleAddEmployee = (newEmployee) => {
     setEmployeesList(prev => [...prev, newEmployee]);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import thriveLogo from "../assets/thriveLogo.svg";
 import ecosoulLogo from "../assets/ecosoulLogo.svg";
 
@@ -53,7 +53,7 @@ const LoginForm = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full p-3 rounded-xl bg-white/80 text-black border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+            className="w-full p-3 rounded-xl bg-white/80 text-black border-2 border-gray-300 focus:border-[#eb5e28] focus:outline-none"
             required
           />
           {errors.email && (
@@ -68,12 +68,16 @@ const LoginForm = () => {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full p-3 rounded-xl bg-white/80 text-black border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+            className="w-full p-3 rounded-xl bg-white/80 text-black border-2 border-gray-300 focus:border-[#eb5e28] focus:outline-none"
             required
           />
           {errors.password && (
             <p className="text-red-300 text-sm mt-1">{errors.password}</p>
           )}
+        </div>
+
+        <div className="flex justify-end p-2">
+          <Link to="/forgot-password" className="text-[#252422] text-sm text-left hover:text-[#eb5e28] transition-all duration-300">Reset Password</Link>
         </div>
 
         <button

@@ -1,26 +1,13 @@
 import React, { useState } from 'react';
 import { FaPlus } from "react-icons/fa";
+import background from '../assets/background.png';
 
-const attendance = [
-    { id: 'E002', date: '2025-01-02', timeUploaded: '11:00 AM', uploadedBy: 'Bob Smith', percentage: '80%' },
-    { id: 'E001', date: '2025-01-01', timeUploaded: '10:00 AM', uploadedBy: 'John Doe', percentage: '90%' },
-    { id: 'E003', date: '2025-01-03', timeUploaded: '12:00 PM', uploadedBy: 'Charlie Brown', percentage: '70%' },
-    { id: 'E004', date: '2025-01-04', timeUploaded: '01:00 PM', uploadedBy: 'Diana Prince', percentage: '60%' },
-    { id: 'E005', date: '2025-01-05', timeUploaded: '02:00 PM', uploadedBy: 'Ethan Hunt', percentage: '50%' },
-    { id: 'E006', date: '2025-01-06', timeUploaded: '03:00 PM', uploadedBy: 'Fiona Gallagher', percentage: '40%' },
-    { id: 'E007', date: '2025-01-07', timeUploaded: '04:00 PM', uploadedBy: 'George Miller', percentage: '30%' },
-    { id: 'E008', date: '2025-01-08', timeUploaded: '05:00 PM', uploadedBy: 'Hannah Lee', percentage: '20%' },
-    { id: 'E009', date: '2025-01-09', timeUploaded: '06:00 PM', uploadedBy: 'Ian Curtis', percentage: '10%' },
-    { id: 'E010', date: '2025-01-10', timeUploaded: '07:00 PM', uploadedBy: 'Julia Roberts', percentage: '0%' },
-];
-
-
-const AttendanceTable = ({ onViewAttendance, onUpload }) => {
+const AttendanceTable = ({ attendanceList = [], onViewAttendance, onUpload }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 5;
 
-    const filteredAttendance = attendance.filter(attendance => 
+    const filteredAttendance = attendanceList.filter(attendance => 
         attendance.date.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -92,8 +79,9 @@ const AttendanceTable = ({ onViewAttendance, onUpload }) => {
 
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mt-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mt-6 relative overflow-hidden">
+            <img src={background} alt="background" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+            <div className="relative z-10 flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-[#403d39] flex items-center">
                     <div className="w-1 h-7 bg-[#eb5e28] rounded-full mr-3"></div>
                     Attendance List
@@ -108,7 +96,7 @@ const AttendanceTable = ({ onViewAttendance, onUpload }) => {
                     </button>
                 )}
             </div>
-            <div className="relative mb-6">
+            <div className="relative z-10 mb-6">
                 <input
                     type="text"
                     placeholder="Search attendance by date"
@@ -122,7 +110,7 @@ const AttendanceTable = ({ onViewAttendance, onUpload }) => {
                     </svg>
                 </div>
             </div>
-            <div className="overflow-x-auto rounded-lg border border-[#ccc5b9]">
+            <div className="relative z-10 overflow-x-auto rounded-lg border border-[#ccc5b9]">
                 <table className="min-w-full divide-y divide-[#ccc5b9]">
                     <thead className="bg-[#fffcf2]">
                         <tr>
@@ -174,7 +162,7 @@ const AttendanceTable = ({ onViewAttendance, onUpload }) => {
                 </table>
             </div>
             {filteredAttendance.length > recordsPerPage && (
-        <div className="mt-6 flex items-center justify-between">
+        <div className="relative z-10 mt-6 flex items-center justify-between">
           <div className="text-sm text-[#8a8a8a]">
             Showing {startIndex + 1} to {Math.min(endIndex, filteredAttendance.length)} of {filteredAttendance.length} results
           </div>

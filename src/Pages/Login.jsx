@@ -2,6 +2,7 @@ import React from 'react'
 import LoginForm from '../Components/LoginForm'
 import SplitText from '../Components/SplitText'
 import SilkBackground from '../Components/SilkBackground'
+import background from '../assets/background.png'
 
 const Login = () => {
   return (

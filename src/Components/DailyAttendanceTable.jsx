@@ -1,41 +1,34 @@
 import React, { useState, useMemo } from 'react';
+import { attendanceService } from '../services/attendanceService';
 import EditEmployeeForm from './EditEmployeeForm';
 import AddEmployeeForm from './AddEmployeeForm';
 import { FaPlus } from 'react-icons/fa';
 import background from '../assets/background.png'
-import { DEPARTMENTS } from '../config/constants';
 
-const employees = [
-  { id: 'E001', name: 'Alice Johnson', email: 'alice.johnson@example.com', department: 'Human Resources and Administration' },
-  { id: 'E002', name: 'Bob Smith', email: 'bob.smith@example.com', department: 'Data Analytics' },
-  { id: 'E003', name: 'Charlie Brown', email: 'charlie.brown@example.com', department: 'Digital Marketing' },
-  { id: 'E004', name: 'Diana Prince', email: 'diana.prince@example.com', department: 'Finance & Accounts' },
-  { id: 'E005', name: 'Ethan Hunt', email: 'ethan.hunt@example.com', department: 'Supply Chain' },
-  { id: 'E006', name: 'Fiona Gallagher', email: 'fiona.gallagher@example.com', department: 'Zonal Sales' },
-  { id: 'E007', name: 'George Miller', email: 'george.miller@example.com', department: 'New Product Design' },
-  { id: 'E008', name: 'Hannah Lee', email: 'hannah.lee@example.com', department: 'Retail E-commerce' },
-  { id: 'E009', name: 'Ian Curtis', email: 'ian.curtis@example.com', department: 'India E-commerce' },
-  { id: 'E010', name: 'Julia Roberts', email: 'julia.roberts@example.com', department: 'Zonal Sales (India)- HORECA' },
+const status = [
+  'Present',
+  'Absent',
 ];
 
-const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmployee, onDeleteEmployee }) => {
+const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmployee, onDeleteEmployee, filterCompany }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const recordsPerPage = 5;
+  const [localEmployees, setLocalEmployees] = useState(employeesList);
+  const recordsPerPage = 25;
 
   const filteredEmployees = useMemo(() => {
-    if (!searchTerm) return employeesList;
+    const isDateQuery = /\b\d{4}-\d{2}-\d{2}\b/.test(searchTerm || '');
+    if (!searchTerm || isDateQuery) return localEmployees;
     
-    return employeesList.filter(emp => 
+    return localEmployees.filter(emp => 
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, employeesList]);
+  }, [searchTerm, localEmployees]);
 
   const totalPages = Math.ceil(filteredEmployees.length / recordsPerPage);
   const startIndex = (currentPage - 1) * recordsPerPage;
@@ -44,6 +37,57 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
 
   React.useEffect(() => {
     setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Fetch daily attendance on mount
+  React.useEffect(() => {
+    const loadDailyAttendance = async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const dateMatch = (searchTerm || '').match(/\b\d{4}-\d{2}-\d{2}\b/);
+        const selectedDate = dateMatch ? dateMatch[0] : today;
+        const data = await attendanceService.getDailyAttendance(selectedDate, filterCompany);
+        const listCandidate = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.records)
+            ? data.records
+            : Array.isArray(data?.attendance)
+              ? data.attendance
+              : Array.isArray(data?.data)
+                ? data.data
+                : [];
+        const list = Array.isArray(listCandidate) ? listCandidate : [];
+        const filtered = list.filter((rec) => {
+          if (!filterCompany) return true;
+          const companyRaw = rec.company ?? rec.companyName ?? rec.org ?? rec.employee?.company ?? '';
+          const normalize = (s) => String(s).toLowerCase().replace(/[^a-z]/g, '');
+          return normalize(companyRaw) === normalize(filterCompany);
+        });
+        const normalized = filtered.map((rec, index) => ({
+          id: String(
+            rec.id ?? rec.employeeId ?? rec.empId ?? rec.employee?.id ?? `E${String(index + 1).padStart(3, '0')}`
+          ),
+          name: rec.name ?? rec.fullName ?? rec.employeeName ?? rec.employee?.name ?? 'Unknown',
+          status:
+            rec.status ??
+            rec.attendanceStatus ??
+            (typeof rec.present === 'boolean' ? (rec.present ? 'Present' : 'Absent') : undefined) ??
+            'Absent',
+        }));
+        setLocalEmployees(normalized);
+      } catch (error) {
+        // If API fails, keep existing props-based data
+        // Optionally log for debugging
+        console.error('Failed to load daily attendance', error);
+      }
+    };
+    loadDailyAttendance();
+  }, [filterCompany, searchTerm]);
+
+  const getSelectedDate = React.useCallback(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const dateMatch = (searchTerm || '').match(/\b\d{4}-\d{2}-\d{2}\b/);
+    return dateMatch ? dateMatch[0] : today;
   }, [searchTerm]);
 
   const handlePageChange = (page) => {
@@ -70,6 +114,30 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
   const handleAddEmployee = (newEmployee) => {
     if (onAddEmployee) {
       onAddEmployee(newEmployee);
+    }
+  };
+
+  const handleStatusChange = async (employeeId, newStatus) => {
+    const previous = localEmployees.find(e => e.id === employeeId)?.status;
+    // optimistic UI update
+    setLocalEmployees(prevEmployees => 
+      prevEmployees.map(emp => 
+        emp.id === employeeId ? { ...emp, status: newStatus } : emp
+      )
+    );
+    try {
+      const date = getSelectedDate();
+      await attendanceService.updateAttendance(employeeId, date, newStatus);
+    } catch (error) {
+      // rollback on failure
+      setLocalEmployees(prevEmployees => 
+        prevEmployees.map(emp => 
+          emp.id === employeeId ? { ...emp, status: previous ?? emp.status } : emp
+        )
+      );
+      const serverMsg = error?.response?.data?.message;
+      console.error('Failed to update attendance status', error);
+      alert(serverMsg || 'Failed to update attendance. Please try again.');
     }
   };
 
@@ -125,32 +193,20 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
     return buttons;
   };
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mt-6 relative overflow-hidden">
+    <div className="w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mt-6 relative overflow-hidden">
       <img src={background} alt="background" className="absolute inset-0 w-full h-full object-cover opacity-30" />
       <div className="relative z-10 flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-[#403d39] flex items-center">
           <div className="w-1 h-7 bg-[#eb5e28] rounded-full mr-3"></div>
-          Employee List
+          Daily Attendance Table
         </h2>
-        <button
-          onClick={() => setIsAddFormOpen(true)}
-          className="bg-[#eb5e28] hover:bg-[#d54e1a] text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:ring-opacity-50 flex items-center gap-2"
-        >
-          <FaPlus size={16}/>
-          Add Employee
-        </button>
       </div>
-    <AddEmployeeForm
-      isOpen={isAddFormOpen}
-      onClose={() => setIsAddFormOpen(false)}
-      onAddEmployee={handleAddEmployee}
-    />
       
       <div className="relative z-10 mb-6">
         <div className="relative">
           <input
             type="text"
-            placeholder="Search employees by name, email, department, or ID"
+            placeholder="Search by Date"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-3 pl-10 text-[#403d39] bg-[#fffcf2] border border-[#ccc5b9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:border-transparent transition-all duration-200 placeholder-[#8a8a8a]"
@@ -163,7 +219,7 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
         </div>
         {searchTerm && (
           <p className="text-sm text-[#8a8a8a] mt-2">
-            Showing {filteredEmployees.length} of {employeesList.length} employees
+            Showing {filteredEmployees.length} of {localEmployees.length} employees daily attendance table
           </p>
         )}
       </div>
@@ -173,19 +229,15 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
           <thead className="bg-[#fffcf2]">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
-                E. Id
+                E. ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
-                Email
+              <th className="px-6 py-3 text-center text-xs font-semibold text-[#403d39] uppercase tracking-wider">
+                Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
-                Department
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider"></th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-[#f5f3ed]">
@@ -201,11 +253,19 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39]">
                     {emp.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39]">
-                    {emp.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#eb5e28] font-semibold">
-                    {emp.department}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#403d39] text-center">
+                    <select
+                      value={emp.status}
+                      onChange={(e) => handleStatusChange(emp.id, e.target.value)}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:ring-opacity-50 ${
+                        emp.status === 'Present' 
+                          ? 'text-green-800 bg-green-100 border-green-200 hover:bg-green-200' 
+                          : 'text-red-800 bg-red-100 border-red-200 hover:bg-red-200'
+                      }`}
+                    >
+                      <option value="Present">Present</option>
+                      <option value="Absent">Absent</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button 
@@ -219,7 +279,7 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="px-6 py-8 text-center text-[#8a8a8a]">
+                <td colSpan="4" className="px-6 py-8 text-center text-[#8a8a8a]">
                   No employees found matching your search criteria.
                 </td>
               </tr>
@@ -255,4 +315,4 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
   );
 };
 
-export default EmployeeTable;
+export default DailyAttendanceTable;

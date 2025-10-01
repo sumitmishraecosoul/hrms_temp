@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../Components/Sidebar';
 import Navbar from '../Components/Navbar';
 import StatCard from '../Components/StatCard';
@@ -11,22 +11,37 @@ import { MdDelete } from "react-icons/md";
 import { MdEdit } from "react-icons/md";
 import EmployeeTable from '../Components/EmployeeTable';
 import AddEmployeeForm from '../Components/AddEmployeeForm';
+import { employeeService } from '../services/employeeService';
     
 const EcoSoulEmployee = () => {
   const [activePage, setActivePage] = useState('home');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [employeesList, setEmployeesList] = useState([
-    { id: 'E001', name: 'Alice Johnson', email: 'alice.johnson@example.com', department: 'HR' },
-    { id: 'E002', name: 'Bob Smith', email: 'bob.smith@example.com', department: 'Engineering' },
-    { id: 'E003', name: 'Charlie Brown', email: 'charlie.brown@example.com', department: 'Marketing' },
-    { id: 'E004', name: 'Diana Prince', email: 'diana.prince@example.com', department: 'Finance' },
-    { id: 'E005', name: 'Ethan Hunt', email: 'ethan.hunt@example.com', department: 'Operations' },
-    { id: 'E006', name: 'Fiona Gallagher', email: 'fiona.gallagher@example.com', department: 'Sales' },
-    { id: 'E007', name: 'George Miller', email: 'george.miller@example.com', department: 'Support' },
-    { id: 'E008', name: 'Hannah Lee', email: 'hannah.lee@example.com', department: 'Engineering' },
-    { id: 'E009', name: 'Ian Curtis', email: 'ian.curtis@example.com', department: 'HR' },
-    { id: 'E010', name: 'Julia Roberts', email: 'julia.roberts@example.com', department: 'Marketing' },
-  ]);
+  const [employeesList, setEmployeesList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        setIsLoading(true);
+        const data = await employeeService.getEcoSoulEmployees();
+        const normalized = Array.isArray(data)
+          ? data.map((emp, index) => ({
+              id: emp.id ?? emp.employeeId ?? emp.empId ?? `E${String(index + 1).padStart(3, '0')}`,
+              name: emp.name ?? emp.fullName ?? emp.employeeName ?? 'Unknown',
+              email: emp.email ?? emp.workEmail ?? emp.personalEmail ?? 'unknown@example.com',
+              department: emp.department ?? emp.departmentName ?? emp.dept ?? 'N/A',
+            }))
+          : [];
+        setEmployeesList(normalized);
+      } catch (error) {
+        console.error('Failed to load employees', error);
+        setEmployeesList([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadEmployees();
+  }, []);
 
   const handleAddEmployee = (newEmployee) => {
     setEmployeesList(prev => [...prev, newEmployee]);
@@ -38,8 +53,14 @@ const EcoSoulEmployee = () => {
     );
   };
 
-  const handleDeleteEmployee = (employeeId) => {
-    setEmployeesList(prev => prev.filter(emp => emp.id !== employeeId));
+  const handleDeleteEmployee = async (employeeId) => {
+    try {
+      await employeeService.deleteEmployee(employeeId);
+      setEmployeesList(prev => prev.filter(emp => emp.id !== employeeId));
+    } catch (error) {
+      console.error('Failed to delete employee', error);
+      // Optionally, show a toast or UI error here
+    }
   };
 
   return (
@@ -52,19 +73,26 @@ const EcoSoulEmployee = () => {
             <h1 className="text-3xl font-bold text-[#403d39] mb-2">Employee Management</h1>
             <p className="text-gray-600">Manage your employees here</p>
           </div>
-      
-          <EmployeeTable 
-            employeesList={employeesList} 
-            onAddEmployee={handleAddEmployee}
-            onUpdateEmployee={handleUpdateEmployee}
-            onDeleteEmployee={handleDeleteEmployee}
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[60vh]">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-[#403d39]"></div>
+            </div>
+          ) : (
+            <>
+              <EmployeeTable 
+                employeesList={employeesList} 
+                onAddEmployee={handleAddEmployee}
+                onUpdateEmployee={handleUpdateEmployee}
+                onDeleteEmployee={handleDeleteEmployee}
+              />
 
-          <AddEmployeeForm
-            isOpen={isAddFormOpen}
-            onClose={() => setIsAddFormOpen(false)}
-            onAddEmployee={handleAddEmployee}
-          />
+              <AddEmployeeForm
+                isOpen={isAddFormOpen}
+                onClose={() => setIsAddFormOpen(false)}
+                onAddEmployee={handleAddEmployee}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>
