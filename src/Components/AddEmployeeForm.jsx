@@ -256,6 +256,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
         const structuredData = {
           employeeData: {
             name: formData.name,
+            phoneNumber: formData.phoneNumber,
             email: formData.email,
             department: formData.department,
             designation: formData.designation,

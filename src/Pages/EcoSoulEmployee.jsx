@@ -30,6 +30,7 @@ const EcoSoulEmployee = () => {
               name: emp.name ?? emp.fullName ?? emp.employeeName ?? 'Unknown',
               email: emp.email ?? emp.workEmail ?? emp.personalEmail ?? 'unknown@example.com',
               department: emp.department ?? emp.departmentName ?? emp.dept ?? 'N/A',
+              biometricId: emp.biometricId ?? emp.biometricID ?? emp.bioId ?? '',
             }))
           : [];
         setEmployeesList(normalized);
