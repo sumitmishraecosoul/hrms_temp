@@ -7,6 +7,7 @@ import ThriveAttendance from './Pages/ThriveAttendance'
 import EcoSoulDashboard from './Pages/EcoSoulDashboard'
 import EcoSoulEmployee from './Pages/EcoSoulEmployee'
 import EcoSoulAttendance from './Pages/EcoSoulAttendance'
+import EmployeeDetailPage from './Pages/EmployeeDetailPage'
 import ProtectedRoute from './Components/ProtectedRoute'
 
 const AppRoutes = () => {
@@ -47,6 +48,16 @@ const AppRoutes = () => {
       <Route path="/ecosoul/attendance" element={
         <ProtectedRoute>
           <EcoSoulAttendance />
+        </ProtectedRoute>
+      } />
+      <Route path="/ecosoul/employee/:id" element={
+        <ProtectedRoute>
+          <EmployeeDetailPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/thrive-brands/employee/:id" element={
+        <ProtectedRoute>
+          <EmployeeDetailPage />
         </ProtectedRoute>
       } />
     </Routes>

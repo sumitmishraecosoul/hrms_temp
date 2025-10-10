@@ -1,29 +1,28 @@
 import React, { useState, useMemo } from 'react';
-import EditEmployeeForm from './EditEmployeeForm';
+import { useNavigate } from 'react-router-dom';
 import AddEmployeeForm from './AddEmployeeForm';
 import { FaPlus } from 'react-icons/fa';
 import background from '../assets/background.png'
 import { DEPARTMENTS } from '../config/constants';
 
 const employees = [
-  { id: 'E001', name: 'Alice Johnson', email: 'alice.johnson@example.com', department: 'Human Resources and Administration' },
-  { id: 'E002', name: 'Bob Smith', email: 'bob.smith@example.com', department: 'Data Analytics' },
-  { id: 'E003', name: 'Charlie Brown', email: 'charlie.brown@example.com', department: 'Digital Marketing' },
-  { id: 'E004', name: 'Diana Prince', email: 'diana.prince@example.com', department: 'Finance & Accounts' },
-  { id: 'E005', name: 'Ethan Hunt', email: 'ethan.hunt@example.com', department: 'Supply Chain' },
-  { id: 'E006', name: 'Fiona Gallagher', email: 'fiona.gallagher@example.com', department: 'Zonal Sales' },
-  { id: 'E007', name: 'George Miller', email: 'george.miller@example.com', department: 'New Product Design' },
-  { id: 'E008', name: 'Hannah Lee', email: 'hannah.lee@example.com', department: 'Retail E-commerce' },
-  { id: 'E009', name: 'Ian Curtis', email: 'ian.curtis@example.com', department: 'India E-commerce' },
-  { id: 'E010', name: 'Julia Roberts', email: 'julia.roberts@example.com', department: 'Zonal Sales (India)- HORECA' },
+  { id: '1', name: 'Alice Johnson', email: 'alice.johnson@example.com', department: 'Human Resources and Administration', biometricId: 'BIO001' },
+  { id: '2', name: 'Bob Smith', email: 'bob.smith@example.com', department: 'Data Analytics', biometricId: 'BIO002' },
+  { id: '3', name: 'Charlie Brown', email: 'charlie.brown@example.com', department: 'Digital Marketing', biometricId: 'BIO003' },
+  { id: '4', name: 'Diana Prince', email: 'diana.prince@example.com', department: 'Finance & Accounts', biometricId: 'BIO004' },
+  { id: '5', name: 'Ethan Hunt', email: 'ethan.hunt@example.com', department: 'Supply Chain', biometricId: 'BIO005' },
+  { id: '6', name: 'Fiona Gallagher', email: 'fiona.gallagher@example.com', department: 'Zonal Sales', biometricId: 'BIO006' },
+  { id: '7', name: 'George Miller', email: 'george.miller@example.com', department: 'New Product Design', biometricId: 'BIO007' },
+  { id: '8', name: 'Hannah Lee', email: 'hannah.lee@example.com', department: 'Retail E-commerce', biometricId: 'BIO008' },
+  { id: '9', name: 'Ian Curtis', email: 'ian.curtis@example.com', department: 'India E-commerce', biometricId: 'BIO009' },
+  { id: '10', name: 'Julia Roberts', email: 'julia.roberts@example.com', department: 'Zonal Sales (India)- HORECA', biometricId: 'BIO010' },
 ];
 
 const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmployee, onDeleteEmployee }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const recordsPerPage = 5;
 
   const filteredEmployees = useMemo(() => {
@@ -51,8 +50,8 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
   };
 
   const handleViewEmployee = (employee) => {
-    setSelectedEmployee(employee);
-    setIsEditFormOpen(true);
+    const company = window.location.pathname.startsWith('/ecosoul') ? 'ecosoul' : 'thrive-brands';
+    navigate(`/${company}/employee/${employee.id}`);
   };
 
   const handleUpdateEmployee = (employeeId, updatedData) => {
@@ -239,18 +238,6 @@ const EmployeeTable = ({ employeesList = employees, onAddEmployee, onUpdateEmplo
         </div>
       )}
 
-      <div className="relative z-20">
-        <EditEmployeeForm
-          isOpen={isEditFormOpen}
-          onClose={() => {
-            setIsEditFormOpen(false);
-            setSelectedEmployee(null);
-          }}
-          employee={selectedEmployee}
-          onUpdateEmployee={handleUpdateEmployee}
-          onDeleteEmployee={handleDeleteEmployee}
-        />
-      </div>
     </div>
   );
 };

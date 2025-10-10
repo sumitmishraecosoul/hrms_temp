@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../services/attendanceService';
-import EditEmployeeForm from './EditEmployeeForm';
-import AddEmployeeForm from './AddEmployeeForm';
-import { FaPlus } from 'react-icons/fa';
 import background from '../assets/background.png'
 
 const status = [
@@ -11,11 +9,9 @@ const status = [
 ];
 
 const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmployee, onDeleteEmployee, filterCompany }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [localEmployees, setLocalEmployees] = useState(employeesList);
   const recordsPerPage = 25;
 
@@ -95,8 +91,8 @@ const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmplo
   };
 
   const handleViewEmployee = (employee) => {
-    setSelectedEmployee(employee);
-    setIsEditFormOpen(true);
+    const company = window.location.pathname.startsWith('/ecosoul') ? 'ecosoul' : 'thrive-brands';
+    navigate(`/${company}/employee/${employee.id}`);
   };
 
   const handleUpdateEmployee = (employeeId, updatedData) => {
@@ -111,11 +107,6 @@ const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmplo
     }
   };
 
-  const handleAddEmployee = (newEmployee) => {
-    if (onAddEmployee) {
-      onAddEmployee(newEmployee);
-    }
-  };
 
   const handleStatusChange = async (employeeId, newStatus) => {
     const previous = localEmployees.find(e => e.id === employeeId)?.status;
@@ -299,18 +290,6 @@ const DailyAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmplo
         </div>
       )}
 
-      <div className="relative z-20">
-        <EditEmployeeForm
-          isOpen={isEditFormOpen}
-          onClose={() => {
-            setIsEditFormOpen(false);
-            setSelectedEmployee(null);
-          }}
-          employee={selectedEmployee}
-          onUpdateEmployee={handleUpdateEmployee}
-          onDeleteEmployee={handleDeleteEmployee}
-        />
-      </div>
     </div>
   );
 };

@@ -1,15 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import EditEmployeeForm from './EditEmployeeForm';
-import AddEmployeeForm from './AddEmployeeForm';
-import { FaPlus } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import background from '../assets/background.png'
 
 const EmployeeAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEmployee, onDeleteEmployee }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const recordsPerPage = 5;
 
   const filteredEmployees = useMemo(() => {
@@ -38,8 +34,8 @@ const EmployeeAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEm
   };
 
   const handleViewEmployee = (employee) => {
-    setSelectedEmployee(employee);
-    setIsEditFormOpen(true);
+    const company = window.location.pathname.startsWith('/ecosoul') ? 'ecosoul' : 'thrive-brands';
+    navigate(`/${company}/employee/${employee.id}`);
   };
 
   const handleUpdateEmployee = (employeeId, updatedData) => {
@@ -54,11 +50,6 @@ const EmployeeAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEm
     }
   };
 
-  const handleAddEmployee = (newEmployee) => {
-    if (onAddEmployee) {
-      onAddEmployee(newEmployee);
-    }
-  };
 
   const renderPaginationButtons = () => {
     const buttons = [];
@@ -164,6 +155,9 @@ const EmployeeAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEm
               <th className="px-6 py-3 text-center text-xs font-semibold text-[#403d39] uppercase tracking-wider">
                 Absent
               </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-[#403d39] uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-[#f5f3ed]">
@@ -188,11 +182,19 @@ const EmployeeAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEm
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#eb5e28] font-semibold text-center">
                     {emp.absent ?? (emp.total != null && emp.present != null ? Math.max(0, emp.total - emp.present) : '-')}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button 
+                      onClick={() => handleViewEmployee(emp)}
+                      className="bg-[#eb5e28] hover:bg-[#d54e1a] text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:ring-opacity-50"
+                    >
+                      View
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="px-6 py-8 text-center text-[#8a8a8a]">
+                <td colSpan="6" className="px-6 py-8 text-center text-[#8a8a8a]">
                   No employees found matching your search criteria.
                 </td>
               </tr>
@@ -212,18 +214,6 @@ const EmployeeAttendanceTable = ({ employeesList = [], onAddEmployee, onUpdateEm
         </div>
       )}
 
-      <div className="relative z-20">
-        <EditEmployeeForm
-          isOpen={isEditFormOpen}
-          onClose={() => {
-            setIsEditFormOpen(false);
-            setSelectedEmployee(null);
-          }}
-          employee={selectedEmployee}
-          onUpdateEmployee={handleUpdateEmployee}
-          onDeleteEmployee={handleDeleteEmployee}
-        />
-      </div>
     </div>
   );
 };

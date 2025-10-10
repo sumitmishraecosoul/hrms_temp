@@ -17,6 +17,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
     company: '',
     dateOfBirth: '',
     workAnniversary: '',
+    active: true,
     fatherName: '',
     personalEmail: '',
     maritalStatus: '',
@@ -37,6 +38,8 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: basic details, 2: personal details, 3: banking details
+  const [profilePicFile, setProfilePicFile] = useState(null);
+  const [profilePicPreview, setProfilePicPreview] = useState('');
 
   
   const isEcoSoul = location.pathname.startsWith('/ecosoul');
@@ -82,6 +85,17 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    setProfilePicFile(file);
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setProfilePicPreview(previewUrl);
+    } else {
+      setProfilePicPreview('');
     }
   };
 
@@ -247,7 +261,8 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
             gender: formData.gender,
             company: formData.company,
             dateOfBirth: formData.dateOfBirth,
-            workAnniversary: formData.workAnniversary
+            workAnniversary: formData.workAnniversary,
+            active: formData.active
           },
           employeeAdditionalDetail: {
             fatherName: formData.fatherName,
@@ -269,7 +284,18 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
           }
         };
         
-        const response = await employeeService.createEmployee(structuredData);
+        // Build payload: if profile picture is selected, send multipart/form-data
+        let payload = structuredData;
+        if (profilePicFile) {
+          const formData = new FormData();
+          formData.append('employeeData', JSON.stringify(structuredData.employeeData));
+          formData.append('employeeAdditionalDetail', JSON.stringify(structuredData.employeeAdditionalDetail));
+          formData.append('employeeBanking', JSON.stringify(structuredData.employeeBanking));
+          formData.append('profilePic', profilePicFile);
+          payload = formData;
+        }
+
+        const response = await employeeService.createEmployee(payload);
         console.log('Employee created successfully:', response);
         
         if (onAddEmployee) {
@@ -289,6 +315,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
           company: '',
           dateOfBirth: '',
           workAnniversary: '',
+          active: true,
           fatherName: '',
           personalEmail: '',
           maritalStatus: '',
@@ -306,6 +333,8 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
           bankName: '',
           uanNumber: ''
         });
+        setProfilePicFile(null);
+        setProfilePicPreview('');
         setErrors({});
         onClose();
       } catch (error) {
@@ -330,6 +359,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
       company: '',
       dateOfBirth: '',
       workAnniversary: '',
+      active: true,
       fatherName: '',
       personalEmail: '',
       maritalStatus: '',
@@ -347,6 +377,8 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
       bankName: '',
       uanNumber: ''
     });
+    setProfilePicFile(null);
+    setProfilePicPreview('');
     setErrors({});
     onClose();
   };
@@ -541,6 +573,58 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
                 />
                 {errors.workAnniversary && (<p className="text-red-500 text-sm mt-1">{errors.workAnniversary}</p>)}
               </div>
+
+            {/* Profile Picture Upload */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-[#403d39] mb-2">Profile Picture</label>
+              <div className="flex items-center justify-between bg-white border border-[#e6e2d6] rounded-xl p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-[#f5f2ea] flex items-center justify-center border border-[#e6e2d6]">
+                    {profilePicPreview ? (
+                      <img src={profilePicPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-8 h-8 text-[#c2b8a3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 20h14a2 2 0 002-2V8l-6-6H7a2 2 0 00-2 2v16z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm text-[#403d39] font-medium">Upload profile picture</p>
+                    <p className="text-xs text-[#8a8a8a]">PNG, JPG or SVG up to 2MB</p>
+                  </div>
+                </div>
+                <label className="cursor-pointer px-4 py-2 text-white rounded-xl font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#eb5e28] focus:ring-opacity-50 bg-[#eb5e28] hover:bg-[#d54e1a]">
+                  <input type="file" accept="image/*" className="hidden" onChange={handleProfilePicChange} />
+                  Choose File
+                </label>
+              </div>
+            </div>
+
+            {/* Active Toggle */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-[#403d39] mb-2">Active Status</label>
+              <div className="flex items-center justify-between bg-white border border-[#e6e2d6] rounded-xl p-4">
+                <div className="flex items-center">
+                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${formData.active ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                  <span className={`text-sm font-medium ${formData.active ? 'text-green-600' : 'text-[#8a8a8a]'}`}>
+                    {formData.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    formData.active
+                      ? 'bg-green-500 focus:ring-green-500 hover:bg-green-600'
+                      : 'bg-gray-300 focus:ring-gray-300 hover:bg-gray-400'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.active ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+            </div>
             </div>
 
             <div className="flex items-center justify-between mt-8">
