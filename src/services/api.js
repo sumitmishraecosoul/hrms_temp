@@ -1,65 +1,64 @@
 import axios from "axios";
-import DEV_URL from "../config/config";
-import { authService } from "./authService";
+
+const baseURL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : "http://localhost:5010";
 
 const api = axios.create({
-  baseURL: DEV_URL,
+  baseURL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
   },
 });
 
-// Request interceptor to add access token to requests
-api.interceptors.request.use(
-  (config) => {
-    const accessToken = authService.getAccessToken();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// concurrency-safe 401 handling
+let refreshInFlight = null;
+const waiters = [];
+const enqueue = () => new Promise((resolve, reject) => waiters.push({ resolve, reject }));
+const flush = (err) => {
+  const list = waiters.splice(0);
+  list.forEach(({ resolve, reject }) => (err ? reject(err) : resolve()));
+};
 
-// Response interceptor to handle token refresh
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (res) => res,
   async (error) => {
-    const originalRequest = error.config;
+    const original = error.config || {};
+    const status = error.response?.status;
+    const isAuthRoute = typeof original.url === 'string' && original.url.startsWith('/auth/');
 
-    // If error is 401 and we haven't already tried to refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    // Only handle 401s, skip auth routes, and ensure single retry
+    if (status !== 401 || original._retried || isAuthRoute) {
+      return Promise.reject(error);
+    }
 
+    if (refreshInFlight) {
       try {
-        const refreshResult = await authService.refreshAccessToken();
-        
-        if (refreshResult.success) {
-          // Retry the original request with new token
-          const newAccessToken = authService.getAccessToken();
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return api(originalRequest);
-        } else {
-          // Refresh failed, redirect to login
-          authService.logout();
-          window.location.href = '/login';
-        }
-      } catch (refreshError) {
-        // Refresh failed, redirect to login
-        authService.logout();
-        window.location.href = '/login';
+        await enqueue();
+        original._retried = true;
+        return api(original);
+      } catch (e) {
+        return Promise.reject(e);
       }
     }
 
-    return Promise.reject(error);
+    try {
+      original._retried = true;
+      // Backend middleware refreshes using refresh cookie on any request.
+      // Simply retry the original request once.
+      refreshInFlight = Promise.resolve();
+      await refreshInFlight;
+      flush(null);
+      return api(original);
+    } catch (e) {
+      flush(e);
+      return Promise.reject(e);
+    } finally {
+      refreshInFlight = null;
+    }
   }
 );
 
 export default api;
-
-

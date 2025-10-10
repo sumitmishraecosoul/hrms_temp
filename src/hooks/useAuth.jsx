@@ -1,7 +1,7 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useMemo } from 'react';
 import { authService } from '../services/authService';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -13,57 +13,58 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
-    // Check if user is already authenticated on app load
-    const checkAuth = () => {
-      const isAuth = authService.isAuthenticated();
-      const currentUser = authService.getCurrentUser();
-      
-      setIsAuthenticated(isAuth);
-      setUser(currentUser);
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, []);
-
-  const login = async (email, password) => {
-    setIsLoading(true);
+  const bootstrap = async () => {
+    setChecking(true);
     try {
-      const result = await authService.login(email, password);
-      
-      if (result.success) {
-        setIsAuthenticated(true);
-        // Get user info from JWT token instead of storing in cookie
-        const userFromToken = authService.getCurrentUser();
-        setUser(userFromToken);
-        return { success: true };
-      } else {
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      return { success: false, error: 'Login failed' };
+      const { user: minimal } = await authService.getMe();
+      setUser(minimal);
+    } catch (e) {
+      setUser(null);
     } finally {
-      setIsLoading(false);
+      setChecking(false);
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setIsAuthenticated(false);
+  useEffect(() => {
+    bootstrap();
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      await authService.login({ email, password });
+      await bootstrap();
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e?.response?.data?.message || 'Login failed' };
+    }
+  };
+
+  const register = async (email, password) => {
+    try {
+      await authService.register({ email, password });
+      await bootstrap();
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e?.response?.data?.message || 'Registration failed' };
+    }
+  };
+
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
 
-  const value = {
+  const value = useMemo(() => ({
     user,
-    isAuthenticated,
-    isLoading,
+    isAuthenticated: !!user,
+    isLoading: checking,
     login,
-    logout
-  };
+    register,
+    logout,
+    refreshSession: bootstrap,
+  }), [user, checking]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../Components/ToastProvider.jsx';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../Components/Sidebar';
 import Navbar from '../Components/Navbar';
@@ -12,6 +13,7 @@ const EmployeeDetailPage = () => {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activePage, setActivePage] = useState('Employees');
+  const { push } = useToast();
 
 
   useEffect(() => {
@@ -26,6 +28,7 @@ const EmployeeDetailPage = () => {
         }
       } catch (error) {
         console.error('Error fetching employee from API:', error);
+        push({ type: 'error', message: 'Failed to load employee details.' });
         setEmployee(null);
       } finally {
         setLoading(false);
@@ -45,9 +48,11 @@ const EmployeeDetailPage = () => {
         ...updatedData
       }));
       
+      push({ type: 'success', message: 'Employee updated successfully.' });
       return true;
     } catch (error) {
       console.error('Error updating employee:', error);
+      push({ type: 'error', message: 'Failed to update employee.' });
       return false;
     }
   };
@@ -59,8 +64,10 @@ const EmployeeDetailPage = () => {
       // Navigate back to employee list
       const company = window.location.pathname.startsWith('/ecosoul') ? 'ecosoul' : 'thrive-brands';
       navigate(`/${company}/employee`);
+      push({ type: 'success', message: 'Employee deleted.' });
     } catch (error) {
       console.error('Error deleting employee:', error);
+      push({ type: 'error', message: 'Failed to delete employee.' });
     }
   };
 
@@ -76,9 +83,11 @@ const EmployeeDetailPage = () => {
           profilePic: newProfilePic ? newProfilePic : prev.profilePic
         };
       });
+      push({ type: 'success', message: 'Profile picture updated.' });
       return true;
     } catch (error) {
       console.error('Error updating profile picture:', error);
+      push({ type: 'error', message: 'Failed to update profile picture.' });
       return false;
     }
   };
@@ -90,9 +99,11 @@ const EmployeeDetailPage = () => {
         ...prev,
         isActive: updated?.isActive ?? !prev?.isActive
       }));
+      push({ type: 'success', message: 'Status updated.' });
       return true;
     } catch (error) {
       console.error('Error toggling active status:', error);
+      push({ type: 'error', message: 'Failed to update status.' });
       return false;
     }
   };

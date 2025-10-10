@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import employeeService from '../services/employeeService';
+import { useToast } from './ToastProvider.jsx';
 import { useLocation } from 'react-router-dom';
 import { DEPARTMENTS, DESIGNATIONS, GENDERS } from '../config/constants';
 
@@ -40,6 +41,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
   const [step, setStep] = useState(1); // 1: basic details, 2: personal details, 3: banking details
   const [profilePicFile, setProfilePicFile] = useState(null);
   const [profilePicPreview, setProfilePicPreview] = useState('');
+  const { push } = useToast();
 
   
   const isEcoSoul = location.pathname.startsWith('/ecosoul');
@@ -297,6 +299,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
 
         const response = await employeeService.createEmployee(payload);
         console.log('Employee created successfully:', response);
+        push({ type: 'success', message: 'Employee created successfully.' });
         
         if (onAddEmployee) {
           onAddEmployee(structuredData);
@@ -340,6 +343,7 @@ const AddEmployeeForm = ({ isOpen, onClose, onAddEmployee, departments = [], des
       } catch (error) {
         console.error('Error creating employee:', error);
         setErrors({ submit: 'Failed to create employee. Please try again.' });
+        push({ type: 'error', message: 'Failed to create employee.' });
       } finally {
         setIsLoading(false);
       }
